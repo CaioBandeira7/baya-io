@@ -167,3 +167,37 @@ def test_long_text_is_chunked_with_overlap():
 
 def test_tokenizer_folds_accents_and_drops_stopwords():
     assert tokenize("A Responsabilidade é Civil!") == ["responsabilidade", "civil"]
+
+
+QA_MD = """# Interview Q&A
+
+### 10. How did you prevent data leakage?
+Features only use history up to the cutoff, and splits are purged chronologically.
+
+### 13. What metrics did you use and why?
+WAPE for volumes, seat-weighted MAE for occupancy, and MAE in seconds per lap in F1. Error is reported per lap.
+
+### 19. What were the F1 results, honestly?
+Lap-time MAE was 1.134 s in the 2025 evaluation; the confidence interval of the gain crosses zero.
+
+### 45. Testing practice?
+Pytest with unit, leakage and regression tests, plus Ruff and strict mypy for ANAC.
+"""
+
+
+def test_section_headings_are_searchable(library):
+    """Q&A notes keep the question in the heading; it must count for retrieval."""
+    library.add("qa.md", QA_MD.encode())
+    assert library.search("How did we prevent data leakage in ANAC?")[0].location.startswith("§ 10.")
+    assert library.search("What was the Laptime error in the F1 project? results")[0].location.startswith("§ 19.")
+
+
+def test_compound_words_from_speech_are_split():
+    assert tokenize("Laptime error") == ["lap", "time", "error"]
+
+
+def test_old_index_is_upgraded_on_load(tmp_path):
+    first = DocumentLibrary(tmp_path)
+    first.add("qa.md", QA_MD.encode())
+    reloaded = DocumentLibrary(tmp_path)          # tokens are rebuilt from text + heading
+    assert reloaded.search("prevent data leakage")[0].location.startswith("§ 10.")

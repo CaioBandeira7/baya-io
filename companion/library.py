@@ -55,7 +55,23 @@ def _fold(text: str) -> str:
 
 
 def tokenize(text: str) -> list[str]:
-    return [t for t in _TOKEN.findall(_fold(text)) if t not in _STOPWORDS and (len(t) > 1 or t.isdigit())]
+    words = []
+    for token in _TOKEN.findall(_fold(text)):
+        words.extend(_COMPOUNDS.get(token, token).split())
+    return [t for t in words if t not in _STOPWORDS and (len(t) > 1 or t.isdigit())]
+
+
+_COMPOUNDS = {"laptime": "lap time", "laptimes": "lap times", "dataset": "data set", "datasets": "data sets"}
+
+
+def chunk_tokens(location: str, text: str) -> list[str]:
+    """Tokens of a passage plus its section heading, counted twice.
+
+    Headings often carry the question or topic (e.g. "### 10. How did you prevent data leakage?"),
+    so they are indexed with extra weight. Page and line labels carry no meaning and are skipped.
+    """
+    heading = location[2:] if location.startswith("§ ") else ""
+    return tokenize(heading) * 2 + tokenize(text)
 
 
 def _clean(text: str) -> str:
@@ -350,7 +366,8 @@ class DocumentLibrary:
         for location, text in units:
             for part in split_into_chunks(text, self.chunk_chars, self.overlap):
                 if _has_words(part):
-                    chunks.append(Chunk(f"{doc_id}-{len(chunks)}", doc_id, len(chunks), location, part, tokenize(part)))
+                    chunks.append(Chunk(f"{doc_id}-{len(chunks)}", doc_id, len(chunks), location, part,
+                                        chunk_tokens(location, part)))
         if not chunks:
             hint = " It may be a scanned PDF without a text layer." if ext == ".pdf" else ""
             raise DocumentError("No readable text was found in this file." + hint)
@@ -459,7 +476,7 @@ class DocumentLibrary:
         for raw in payload.get("chunks", []):
             if raw["doc_id"] in self._docs:
                 chunk = Chunk(raw["id"], raw["doc_id"], raw["ordinal"], raw["location"], raw["text"],
-                              tokenize(raw["text"]))
+                              chunk_tokens(raw["location"], raw["text"]))
                 self._chunks[chunk.id] = chunk
                 self._doc_chunks[chunk.doc_id].append(chunk.id)
 
