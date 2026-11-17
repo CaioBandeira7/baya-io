@@ -50,7 +50,7 @@ The pufferfish (*baiacu*) is the project's mascot and visual identity.
 
 ![Real session on the PC control panel](assets/screenshots/real-session-pc.png)
 
-*A question asked aloud is transcribed, matched to the author's own notes, and answered in one sentence with its source (`S1`). The original excerpt stays visible so the answer can be checked.*
+*A question asked aloud is transcribed, matched to the author's own notes, and answered in one sentence with its source (`S1`). The original excerpt stays visible so the answer can be checked. File names were renamed for privacy.*
 
 ### iPad results display
 
