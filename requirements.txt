@@ -1,0 +1,9 @@
+# Third-party packages imported by src/baya_v8.py.
+# Versions are intentionally unpinned: the original environment's exact
+# versions have not been captured yet (see docs/issue-plan.md, issue #1).
+# tkinter ships with the standard Windows Python installer.
+numpy
+requests
+soundcard
+webrtcvad
+faster-whisper
