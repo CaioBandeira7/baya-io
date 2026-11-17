@@ -180,3 +180,6 @@ body.display .brand img { width: 34px; height: 34px; }
 .captions .turn .who { display: none; }
 .captions .empty { padding: 6px 0; text-align: left; }
 .icon-btn { text-decoration: none; }
+.card.no-match { background: var(--soft); border-style: dashed; padding: 10px 14px; }
+.card.no-match .summary { font-size: .95rem !important; margin: 0; }
+.results .card.no-match:first-of-type { box-shadow: none; border-color: var(--line); }

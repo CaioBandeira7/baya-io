@@ -16,7 +16,7 @@ from typing import Callable
 import requests
 
 from . import config
-from .library import DocumentLibrary, SearchResult
+from .library import DocumentLibrary, SearchResult, tokenize
 
 NO_ANSWER = "NO_ANSWER"
 Generator = Callable[[str, Callable[[str], None]], str]
@@ -141,18 +141,28 @@ class Assistant:
         self.k, self.min_terms, self.min_score = k, min_terms, min_score
 
     def relevant(self, query: str) -> list[SearchResult]:
+        terms = set(tokenize(query))
+        # Short questions ("What's your name?") have one or two content words: require all of them.
+        needed = min(self.min_terms, len(terms)) if len(terms) <= 2 else self.min_terms
+        short = 0 < len(terms) <= 2
+        # BM25 scores are low in small libraries, so a short question that matches every
+        # one of its words is accepted without the score threshold.
         return [r for r in self.library.search(query, self.k)
-                if len(r.matched_terms) >= self.min_terms and r.score >= self.min_score]
+                if len(r.matched_terms) >= max(1, needed)
+                and (r.score >= self.min_score or (short and set(r.matched_terms) == terms))]
 
     def respond(self, turn: str, on_partial: Callable[[str], None] = lambda _: None,
                 on_sources: Callable[[dict], None] | None = None) -> dict | None:
         focus = focus_of(turn)
         results = self.relevant(focus) or (self.relevant(turn) if focus != turn else [])
-        if not is_request(turn):
+        request = is_request(turn)
+        if not request:
             # Plain statements ("Good question, let me check...") need stronger evidence.
             results = [r for r in results if len(r.matched_terms) >= self.min_terms + 2]
         if not results:
-            return None
+            # A question with nothing in the documents gets a small notice instead of silence.
+            return {"query": focus, "summary": "", "citations": [], "flags": [], "no_match": True,
+                    "model": None} if request else None
         sources = [{"label": f"S{i}", "chunk_id": r.chunk_id, "doc_id": r.doc_id, "doc_name": r.doc_name,
                     "location": r.location, "excerpt": r.text, "matched_terms": list(r.matched_terms),
                     "score": r.score, "cited": False}
@@ -171,5 +181,7 @@ class Assistant:
                 flags += more_flags
                 for source in sources:
                     source["cited"] = source["label"] in cited
-        return {"query": focus, "summary": summary, "citations": sources, "flags": flags,
-                "model": getattr(self.generator, "model", None)}
+        # Show one answer, not a list: the cited source(s), or the single best match.
+        shown = [s for s in sources if s["cited"]] or sources[:1]
+        return {"query": focus, "summary": summary, "citations": shown, "flags": flags,
+                "no_match": False, "model": getattr(self.generator, "model", None)}

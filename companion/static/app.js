@@ -104,7 +104,7 @@
     const node = el("div", { class: `source ${src.cited ? "" : "uncited"}` },
       el("div", { class: "meta" },
         el("span", { class: "cite" }, src.label), el("b", {}, src.doc_name), el("span", {}, src.location),
-        el("span", { class: "tag" }, src.cited ? "cited" : "related")),
+        el("span", { class: "tag" }, "source")),
       el("p", { class: "excerpt" }, ...highlighted(src.excerpt, src.matched_terms)));
     if (src.excerpt.length > 260) {
       const more = el("button", { class: "more", onclick: () => {
@@ -117,6 +117,11 @@
   }
 
   function renderCard(item, fresh) {
+    if (item.no_match) {
+      return el("article", { class: "card no-match", "data-id": item.id },
+        el("div", { class: "query" }, "About: ", el("b", {}, item.query || "")),
+        el("p", { class: "summary pending" }, "Nothing about this in your active documents."));
+    }
     const card = el("article", { class: `card ${fresh ? "fresh" : ""}`, "data-id": item.id },
       el("div", { class: "query" }, "About: ", el("b", {}, item.query || "")),
       item.summary ? el("p", { class: "summary" }, ...summaryNodes(item.summary))

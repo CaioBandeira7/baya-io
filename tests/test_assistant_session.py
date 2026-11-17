@@ -78,8 +78,24 @@ def test_assistant_returns_excerpts_and_grounded_summary(library, civil_pdf, con
 def test_assistant_stays_silent_without_relevant_documents(library, civil_pdf):
     library.add("civil.pdf", civil_pdf)
     gen = FakeGenerator("anything")
-    assert Assistant(library, gen).respond("Nice weather today, isn't it?") is None
+    item = Assistant(library, gen).respond("Nice weather today, isn't it?")
+    assert item["no_match"] is True and item["citations"] == []   # a question gets a notice, not silence
+    assert Assistant(library, gen).respond("Nice weather today.") is None
     assert gen.prompts == []                                      # no model call without evidence
+
+
+def test_short_question_matches_a_single_word(library):
+    library.add("about_me.md", b"# About me\nMy name is Caio Bandeira and I live in Brasilia.")
+    item = Assistant(library, FakeGenerator("My name is Caio Bandeira [S1].")).respond("What's your name?")
+    assert item["no_match"] is False and item["citations"][0]["doc_name"] == "about_me.md"
+
+
+def test_only_the_cited_source_is_shown(library, civil_pdf, contract_docx):
+    library.add("civil.pdf", civil_pdf)
+    library.add("contract.docx", contract_docx)
+    item = Assistant(library, FakeGenerator("Damage must be repaired [S1].")).respond(
+        "Who must repair damage caused by an unlawful act, and what is the compensation for the damage?")
+    assert len(item["citations"]) == 1 and item["citations"][0]["label"] == "S1"
 
 
 def test_assistant_no_answer_keeps_excerpts_only(library, civil_pdf):

@@ -184,11 +184,12 @@ class Session:
                          "latency": round(time.perf_counter() - ended_at, 2)})
             with self._lock:
                 recent = [{c["chunk_id"] for c in old["citations"]} for old in self.context[-3:]]
-                if {c["chunk_id"] for c in item["citations"]} in recent:
+                evidence = {c["chunk_id"] for c in item["citations"]}
+                if evidence and evidence in recent:
                     self.bus.publish("context_discard", {"id": item_id})  # same evidence as a recent card
                     continue
                 # A document may have been deleted or deactivated while generating.
-                if self.library.generation != generation:
+                if self.library.generation != generation and item["citations"]:
                     item["citations"] = [c for c in item["citations"] if self.library.is_chunk_live(c["chunk_id"])]
                     if not item["citations"]:
                         self.bus.publish("context_discard", {"id": item_id})
