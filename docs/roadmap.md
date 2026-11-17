@@ -32,10 +32,10 @@ Remaining work: modularize the single file, add a CPU fallback, make paths and m
 
 | Item | Status | Notes |
 |---|---|---|
-| Document ingestion | 🟡 | Only one Markdown notes file (table cells) today. Planned: PDF, DOCX, Markdown with page/section metadata |
-| Semantic search | ⬜ | Embeddings + local vector index |
+| Document ingestion | 🟡 | Companion MVP: PDF, DOCX, TXT and Markdown with page/section/line locations. No OCR yet |
+| Semantic search | 🟡 | Companion MVP uses BM25 keyword search; embeddings + local vector index planned |
 | RAG | ⬜ | Generator constrained to retrieved passages |
-| Source citations | ⬜ | Each cue linked to document, page and section |
+| Source citations | 🟡 | Companion MVP: numbered citations with original excerpts and a citation/number verifier |
 
 Open questions: chunk size and overlap for meeting-style queries; how domain (legal vs. technical) affects retrieval; whether to use hybrid retrieval (BM25 + dense).
 

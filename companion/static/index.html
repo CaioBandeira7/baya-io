@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Baya.io">
+<meta name="theme-color" content="#ffffff">
+<title>Baya.io Companion</title>
+<link rel="icon" href="/static/baya-logo.png">
+<link rel="apple-touch-icon" href="/static/baya-logo.png">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="rec-banner" role="status" aria-live="polite">
+    <span class="rec-dot" aria-hidden="true"></span>
+    <span id="bannerText">LISTENING · audio is being transcribed on your PC</span>
+  </div>
+
+  <header class="top">
+    <div class="brand">
+      <img src="/static/baya-logo.png" alt="">
+      <div><b>Baya.io Companion</b><span id="modelName">Local second screen</span></div>
+    </div>
+    <span class="status-pill" id="statusPill"><span class="dot"></span><span id="statusLabel">Capture off</span></span>
+    <div class="controls">
+      <select class="select" id="sourceSelect" aria-label="Audio source">
+        <option value="system">System audio</option>
+        <option value="microphone">Microphone</option>
+        <option value="both">System + microphone</option>
+      </select>
+      <button class="btn btn-primary" id="startBtn">Start session</button>
+      <button class="btn btn-stop hidden" id="stopBtn">Stop session</button>
+      <button class="icon-btn" id="logoutBtn" title="Unpair this device">Unpair</button>
+    </div>
+  </header>
+  <div class="statusline" id="statusLine">Connecting to your PC…</div>
+
+  <main class="grid">
+    <section class="col left">
+      <div class="panel" id="transcriptPanel">
+        <h2>Live transcription <span class="count" id="turnCount"></span></h2>
+        <div class="scroll" id="transcript">
+          <div class="empty" id="transcriptEmpty">Nothing is being captured. Press <b>Start session</b> when everyone has agreed.</div>
+        </div>
+      </div>
+      <div class="panel" id="documentsPanel">
+        <h2>Documents <span class="count" id="docCount"></span></h2>
+        <div class="scroll" id="documents"></div>
+        <div class="notice hidden" id="docNotice" role="status"></div>
+        <div class="upload">
+          <input type="file" id="fileInput" class="hidden" multiple accept=".pdf,.docx,.txt,.md">
+          <button class="btn btn-ghost" id="uploadBtn">Add documents</button>
+          <span class="hint" id="uploadHint">PDF, DOCX, TXT, Markdown</span>
+        </div>
+      </div>
+    </section>
+    <section class="col right">
+      <div class="panel" id="contextPanel">
+        <h2>Context from your documents <span class="count" id="contextCount"></span></h2>
+        <div class="scroll" id="context">
+          <div class="empty" id="contextEmpty"><img src="/static/baya-logo.png" alt="">Relevant passages from your active documents will appear here, with their sources.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal hidden" id="consentModal" role="dialog" aria-modal="true" aria-labelledby="consentTitle">
+    <div class="box">
+      <h3 id="consentTitle">Start transcription?</h3>
+      <p>Baya.io will transcribe <b id="consentSource">system audio</b> on your PC until you press Stop. Audio is not saved.</p>
+      <label><input type="checkbox" id="consentCheck"> Everyone in this meeting or presentation knows about and has authorized the transcription.</label>
+      <div class="actions">
+        <button class="btn btn-ghost" id="consentCancel">Cancel</button>
+        <button class="btn btn-primary" id="consentOk" disabled>Start session</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="deleteTitle">
+    <div class="box">
+      <h3 id="deleteTitle">Delete document?</h3>
+      <p><b id="deleteName"></b> will be removed from your PC, from the search index and from the current session context. This cannot be undone.</p>
+      <div class="actions">
+        <button class="btn btn-ghost" id="deleteCancel">Cancel</button>
+        <button class="btn btn-stop" id="deleteOk">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

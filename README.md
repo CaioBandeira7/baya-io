@@ -74,6 +74,10 @@ Every item marked as implemented below was verified by reading the source code o
 | Concurrency | Four worker threads (capture → VAD → transcription → generation) connected by bounded queues with a drop-oldest policy. |
 | Desktop interface | **Tkinter** always-on-top window with Start/Stop, a status line, the detected question, the cues and per-question latency readouts. |
 
+### 🧪 Baya.io Companion (MVP, branch `companion`)
+
+A local second screen: the Windows PC runs capture, Faster-Whisper, document search and Ollama, and an iPad on the same Wi-Fi shows the live transcription and cited passages from the user's own documents in Safari. It adds a PDF/DOCX/TXT/Markdown library with BM25 retrieval, source citations with the original excerpts, PIN pairing and a local-network-only server. See [`docs/companion.md`](docs/companion.md).
+
 ### 🔧 Under development
 
 - Moving the demo notes out of the source code into an example notes file
@@ -220,8 +224,12 @@ baya-io/
 │   └── baya-concept.png          # Concept mockup (not a screenshot)
 ├── src/
 │   └── baya_v8.py                # Current prototype (V8, public edition)
+├── companion/                    # Baya.io Companion: FastAPI server + iPad web UI
+├── tests/                        # Companion test suite (pytest)
+├── start_companion.bat
 └── docs/
     ├── architecture.md
+    ├── companion.md
     ├── roadmap.md
     └── issue-plan.md
 ```
