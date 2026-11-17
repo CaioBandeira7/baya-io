@@ -52,7 +52,7 @@ Open questions: chunk size and overlap for meeting-style queries; how domain (le
 
 | Item | Status | Notes |
 |---|---|---|
-| Improved interface | ⬜ | Direction shown in `assets/baya-concept.png` (mockup) |
+| Improved interface | 🟡 | Companion control panel (PC) and results display (iPad) |
 | Document libraries | ⬜ | Per-project collections |
 | Floating assistant | 🟡 | Always-on-top Tkinter window exists |
 | Windows packaging | ⬜ | Installer handling CUDA/Ollama prerequisites |
