@@ -1,0 +1,63 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Secrets and local configuration ---
+.env
+.env.*
+*.key
+*.pem
+secrets/
+credentials*.json
+config.local.*
+
+# --- Personal notes, documents and recordings ---
+# Personal notes read by the prototype (src/notes.md) and private earlier versions.
+Introdução e trajetória.md
+notes.md
+legacy/
+*trajetoria*.md
+*trajetória*.md
+notes/
+private/
+documents/
+data/
+*.wav
+*.mp3
+*.m4a
+*.flac
+*.ogg
+
+# --- Model weights and caches ---
+models/
+*.bin
+*.safetensors
+*.gguf
+*.ct2
+.cache/
+huggingface/
+
+# --- Logs and temporary files ---
+*.log
+logs/
+*.tmp
+*.bak
+
+# --- OS / editors ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
