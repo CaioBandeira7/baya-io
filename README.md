@@ -64,12 +64,6 @@ The pufferfish (*baiacu*) is the project's mascot and visual identity.
 
 *The demo screenshots use sample documents (a civil code excerpt and a fictitious supply contract) and a scripted conversation.*
 
-### Product vision (concept, not the current UI)
-
-![Baya.io: Concept Preview](assets/baya-concept.png)
-
-*Concept preview of the long-term product experience. It is a design mockup, not a screenshot.*
-
 ## How it works
 
 ```mermaid
@@ -204,7 +198,7 @@ baya-io/
 ├── tests/                  # pytest suite (96 tests)
 ├── src/baya_v8.py          # Original real-time prototype (V8, Tkinter)
 ├── docs/                   # companion.md, architecture.md, roadmap.md, issue-plan.md
-├── assets/                 # Screenshots and concept image
+├── assets/                 # Screenshots
 ├── start_companion.bat
 ├── requirements.txt
 └── requirements-companion.txt
