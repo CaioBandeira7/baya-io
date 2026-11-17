@@ -73,7 +73,7 @@
     const select = $("sourceSelect");
     if (select) { select.disabled = listening || s.state === "starting"; if (s.source) select.value = s.source; }
     if (DISPLAY) setText("idleHint", listening ? "" : "Waiting for the PC to start a session.");
-    setText("bannerText", `LISTENING · ${SOURCE_LABELS[s.source] || "audio"} is being transcribed on your PC`);
+    setText("bannerText", `LISTENING · ${SOURCE_LABELS[s.source] || "audio"} ${s.source === "both" ? "are" : "is"} being transcribed on your PC`);
     if (s.status) setText("statusLine", s.status);
   }
 

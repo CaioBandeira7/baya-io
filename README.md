@@ -12,7 +12,7 @@ The pufferfish (*baiacu*) is the project's mascot and visual identity.
 
 ![Baya.io: PC control panel during a session](assets/screenshots/pc-control-panel.png)
 
-*PC control panel during a demo session with sample documents: live transcription on the left, answers grounded in the documents on the right.*
+*PC control panel during a client consultation about a late software delivery: live transcription and the document library on the left, answers grounded in the contract, the Civil Code and the case notes on the right.*
 
 ---
 
@@ -46,23 +46,19 @@ The pufferfish (*baiacu*) is the project's mascot and visual identity.
 
 ## Screenshots
 
-### Real session: the author's project notes (Windows · RTX 4060 · Qwen 2.5 7B)
-
-![Real session on the PC control panel](assets/screenshots/real-session-pc.png)
-
-*A question asked aloud is transcribed, matched to the author's own notes, and answered in one sentence with its source (`S1`). The original excerpt stays visible so the answer can be checked. File names were renamed for privacy.*
+**Example: a lawyer's video consultation with a client whose software supplier delivered three weeks late.** The lawyer adds the contract, selected Civil Code articles and the intake notes. During the call, Baya.io answers each question with the relevant clause or article and shows the original excerpt.
 
 ### iPad results display
 
 ![iPad display](assets/screenshots/ipad-display.png)
 
-*The iPad shows only results: the latest answer in large type, older ones dimmed, live captions at the bottom, and a red LISTENING banner while capture is on.*
+*The iPad shows only results: the latest answer in large type with its sources, older answers below, live captions at the bottom, and a red LISTENING banner while capture is on.*
 
 | Pairing the iPad with a PIN | Consent before every session |
 |---|---|
 | ![Pairing](assets/screenshots/ipad-pairing.png) | ![Consent](assets/screenshots/consent.png) |
 
-*The demo screenshots use sample documents (a civil code excerpt and a fictitious supply contract) and a scripted conversation.*
+*The screenshots use the sample documents in [`examples/legal-demo`](examples/legal-demo): a fictitious contract, fictitious case notes and an unofficial English translation of Brazilian Civil Code articles. The conversation and the model output were scripted for the screenshots; you can run the same documents with live audio and the local model.*
 
 ## How it works
 
@@ -186,7 +182,7 @@ The components above make it possible to run experiments on speed, retrieval pre
 - **Only transcribe conversations you are authorized to process, with the knowledge and consent of the participants.** Recording and consent rules vary by jurisdiction.
 - Baya.io shows a red **LISTENING** banner on the iPad and a status window on the PC whenever capture is on. It has no hidden mode.
 - Audio is never written to disk. Transcripts and answers live in memory and are cleared when the session stops.
-- Baya.io is not intended to give covert assistance in interviews, exams or any assessment where outside help is not allowed.
+- Baya.io is not intended for covert assistance in any situation where outside help is not allowed.
 - It provides no enterprise security or regulatory compliance guarantees.
 
 ## Repository structure
@@ -198,6 +194,7 @@ baya-io/
 ├── tests/                  # pytest suite (96 tests)
 ├── src/baya_v8.py          # Original real-time prototype (V8, Tkinter)
 ├── docs/                   # companion.md, architecture.md, roadmap.md, issue-plan.md
+├── examples/legal-demo/    # Sample legal documents used in the screenshots
 ├── assets/                 # Screenshots
 ├── start_companion.bat
 ├── requirements.txt
@@ -206,7 +203,7 @@ baya-io/
 
 ## Project history
 
-Baya.io started as a local interview-practice assistant (V4–V8): live audio, Faster-Whisper, a local LLM and a Tkinter overlay. The key lesson from those versions was that free-form generation produced unsupported claims, while **grounding every answer in the user's own material** made the output reliable. The Companion turns that lesson into a general, document-grounded meeting copilot with a second screen. See [`docs/architecture.md`](docs/architecture.md).
+Baya.io started as a personal speaking-practice assistant (V4–V8): live audio, Faster-Whisper, a local LLM and a Tkinter overlay. The key lesson from those versions was that free-form generation produced unsupported claims, while **grounding every answer in the user's own material** made the output reliable. The Companion turns that lesson into a general, document-grounded meeting copilot with a second screen. See [`docs/architecture.md`](docs/architecture.md).
 
 ## License
 

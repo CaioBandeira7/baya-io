@@ -175,7 +175,7 @@ class Session:
             try:
                 item = self.assistant.respond(turn["text"], partial, preview)
             except Exception as exc:  # noqa: BLE001 - never kill the worker
-                self.set_status(f"Assistant error: {exc}")
+                self.set_status(f"Assistant error: {type(exc).__name__}: {exc}")
                 continue
             if item is None:
                 self.bus.publish("context_discard", {"id": item_id})
