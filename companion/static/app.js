@@ -1,6 +1,9 @@
 "use strict";
 (function () {
   const $ = (id) => document.getElementById(id);
+  const on = (id, event, handler) => $(id)?.addEventListener(event, handler);
+  const setText = (id, text) => { const node = $(id); if (node) node.textContent = text; };
+  const DISPLAY = document.body.classList.contains("display");
   const SOURCE_LABELS = { system: "system audio", microphone: "the microphone", both: "system audio and the microphone" };
   const state = { session: "idle", documents: [], context: new Map(), turns: 0, events: null };
 
@@ -33,6 +36,7 @@
 
   function notice(text, kind = "ok") {
     const box = $("docNotice");
+    if (!box) return;
     box.textContent = text;
     box.className = `notice ${kind}`;
     clearTimeout(notice.timer);
@@ -63,13 +67,14 @@
     document.body.classList.toggle("listening", listening);
     const pill = $("statusPill");
     pill.className = `status-pill ${s.state === "listening" ? "listening" : s.state === "starting" ? "starting" : ""}`;
-    $("statusLabel").textContent = listening ? "LISTENING" : s.state === "starting" ? "Starting…" : "Capture off";
-    $("startBtn").classList.toggle("hidden", listening || s.state === "starting");
-    $("stopBtn").classList.toggle("hidden", !(listening || s.state === "starting"));
-    $("sourceSelect").disabled = listening || s.state === "starting";
-    if (s.source) $("sourceSelect").value = s.source;
-    $("bannerText").textContent = `LISTENING · ${SOURCE_LABELS[s.source] || "audio"} is being transcribed on your PC`;
-    if (s.status) $("statusLine").textContent = s.status;
+    setText("statusLabel", listening ? "LISTENING" : s.state === "starting" ? "Starting…" : "Capture off");
+    $("startBtn")?.classList.toggle("hidden", listening || s.state === "starting");
+    $("stopBtn")?.classList.toggle("hidden", !(listening || s.state === "starting"));
+    const select = $("sourceSelect");
+    if (select) { select.disabled = listening || s.state === "starting"; if (s.source) select.value = s.source; }
+    if (DISPLAY) setText("idleHint", listening ? "" : "Waiting for the PC to start a session.");
+    setText("bannerText", `LISTENING · ${SOURCE_LABELS[s.source] || "audio"} is being transcribed on your PC`);
+    if (s.status) setText("statusLine", s.status);
   }
 
   // ---------- transcript ----------
@@ -82,15 +87,16 @@
       el("div", { class: `who ${turn.speaker === "microphone" ? "you" : ""}` }, who, el("time", {}, time(turn.time))),
       el("p", {}, turn.text)));
     state.turns += 1;
-    $("turnCount").textContent = `${state.turns}`;
+    if (DISPLAY) while (box.querySelectorAll(".turn").length > 3) box.querySelector(".turn").remove();
+    setText("turnCount", `${state.turns}`);
     if (nearBottom) box.scrollTop = box.scrollHeight;
   }
 
   function resetTranscript() {
     state.turns = 0;
-    $("turnCount").textContent = "";
+    setText("turnCount", "");
     $("transcript").replaceChildren(el("div", { class: "empty", id: "transcriptEmpty" },
-      "Nothing is being captured. Press ", el("b", {}, "Start session"), " when everyone has agreed."));
+      DISPLAY ? "Live captions will appear here." : ["Nothing is being captured. Press ", el("b", {}, "Start session"), " when everyone has agreed."]));
   }
 
   // ---------- context ----------
@@ -128,7 +134,7 @@
     const card = renderCard(item, fresh);
     if (existing) existing.replaceWith(card); else box.prepend(card);
     state.context.set(item.id, item);
-    $("contextCount").textContent = `${box.querySelectorAll(".card").length}`;
+    setText("contextCount", `${box.querySelectorAll(".card").length}`);
   }
 
   function removeContext(ids) {
@@ -137,13 +143,13 @@
       state.context.delete(id);
     }
     const count = $("context").querySelectorAll(".card").length;
-    $("contextCount").textContent = count ? `${count}` : "";
+    setText("contextCount", count ? `${count}` : "");
     if (!count) resetContext();
   }
 
   function resetContext() {
     state.context.clear();
-    $("contextCount").textContent = "";
+    setText("contextCount", "");
     $("context").replaceChildren(el("div", { class: "empty", id: "contextEmpty" },
       el("img", { src: "/static/baya-logo.png", alt: "" }),
       "Relevant passages from your active documents will appear here, with their sources."));
@@ -152,8 +158,9 @@
   // ---------- documents ----------
   function renderDocuments(docs) {
     state.documents = docs;
+    if (!$("documents")) return;
     const active = docs.filter((d) => d.active).length;
-    $("docCount").textContent = docs.length ? `${active} active of ${docs.length}` : "";
+    setText("docCount", docs.length ? `${active} active of ${docs.length}` : "");
     const box = $("documents");
     if (!docs.length) {
       box.replaceChildren(el("div", { class: "empty" }, "No documents yet. Add PDF, DOCX, TXT or Markdown files from this iPad."));
@@ -175,12 +182,12 @@
     }));
   }
 
-  async function refreshDocuments() { renderDocuments(await api("/api/documents")); }
+  async function refreshDocuments() { if ($("documents")) renderDocuments(await api("/api/documents")); }
 
   let pendingDelete = null;
-  function askDelete(doc) { pendingDelete = doc; $("deleteName").textContent = doc.name; $("deleteModal").classList.remove("hidden"); }
-  $("deleteCancel").addEventListener("click", () => $("deleteModal").classList.add("hidden"));
-  $("deleteOk").addEventListener("click", async () => {
+  function askDelete(doc) { pendingDelete = doc; setText("deleteName", doc.name); $("deleteModal").classList.remove("hidden"); }
+  on("deleteCancel", "click", () => $("deleteModal").classList.add("hidden"));
+  on("deleteOk", "click", async () => {
     $("deleteModal").classList.add("hidden");
     if (!pendingDelete) return;
     try { await api(`/api/documents/${pendingDelete.id}`, { method: "DELETE" }); notice(`Deleted ${pendingDelete.name}.`); await refreshDocuments(); }
@@ -188,12 +195,12 @@
     pendingDelete = null;
   });
 
-  $("uploadBtn").addEventListener("click", () => $("fileInput").click());
-  $("fileInput").addEventListener("change", async (event) => {
+  on("uploadBtn", "click", () => $("fileInput").click());
+  on("fileInput", "change", async (event) => {
     const files = [...event.target.files];
     event.target.value = "";
     for (const file of files) {
-      $("uploadHint").textContent = `Indexing ${file.name}…`;
+      setText("uploadHint", `Indexing ${file.name}…`);
       const form = new FormData();
       form.append("file", file);
       try {
@@ -201,29 +208,29 @@
         notice(res.created ? `Added ${res.document.name} (${res.document.chunk_count} passages).` : `${file.name} is already in the library.`);
       } catch (e) { notice(`${file.name}: ${e.message}`, "error"); }
     }
-    $("uploadHint").textContent = "PDF, DOCX, TXT, Markdown";
+    setText("uploadHint", "PDF, DOCX, TXT, Markdown");
     await refreshDocuments();
   });
 
   // ---------- session controls ----------
-  $("startBtn").addEventListener("click", () => {
-    $("consentSource").textContent = SOURCE_LABELS[$("sourceSelect").value];
+  on("startBtn", "click", () => {
+    setText("consentSource", SOURCE_LABELS[$("sourceSelect").value]);
     $("consentCheck").checked = false;
     $("consentOk").disabled = true;
     $("consentModal").classList.remove("hidden");
   });
-  $("consentCheck").addEventListener("change", (e) => { $("consentOk").disabled = !e.target.checked; });
-  $("consentCancel").addEventListener("click", () => $("consentModal").classList.add("hidden"));
-  $("consentOk").addEventListener("click", async () => {
+  on("consentCheck", "change", (e) => { $("consentOk").disabled = !e.target.checked; });
+  on("consentCancel", "click", () => $("consentModal").classList.add("hidden"));
+  on("consentOk", "click", async () => {
     $("consentModal").classList.add("hidden");
     applyState({ state: "starting", source: $("sourceSelect").value, status: "Starting capture…" });
     try { applyState(await api("/api/session/start", json("POST", { source: $("sourceSelect").value }))); }
     catch (e) { applyState({ state: "idle", status: e.message }); }
   });
-  $("stopBtn").addEventListener("click", async () => {
-    try { applyState(await api("/api/session/stop", json("POST"))); } catch (e) { $("statusLine").textContent = e.message; }
+  on("stopBtn", "click", async () => {
+    try { applyState(await api("/api/session/stop", json("POST"))); } catch (e) { setText("statusLine", e.message); }
   });
-  $("logoutBtn").addEventListener("click", async () => {
+  on("logoutBtn", "click", async () => {
     try { await api("/api/logout", json("POST")); } finally { window.location.replace("/login"); }
   });
 
@@ -234,7 +241,7 @@
     state.events = events;
     events.addEventListener("snapshot", (e) => {
       const s = JSON.parse(e.data);
-      $("modelName").textContent = `Local model · ${s.model}`;
+      setText("modelName", `Local model · ${s.model}`);
       applyState(s);
       resetTranscript();
       s.transcript.forEach(addTurn);
@@ -243,7 +250,7 @@
       renderDocuments(s.documents);
     });
     events.addEventListener("state", (e) => applyState(JSON.parse(e.data)));
-    events.addEventListener("status", (e) => { $("statusLine").textContent = JSON.parse(e.data).status; });
+    events.addEventListener("status", (e) => { setText("statusLine", JSON.parse(e.data).status); });
     events.addEventListener("transcript", (e) => addTurn(JSON.parse(e.data)));
     events.addEventListener("context_partial", (e) => {
       const d = JSON.parse(e.data);
@@ -256,7 +263,7 @@
     events.addEventListener("cleared", () => { resetTranscript(); resetContext(); });
     events.addEventListener("documents", () => refreshDocuments().catch(() => {}));
     events.onerror = async () => {
-      $("statusLine").textContent = "Connection to your PC lost. Reconnecting…";
+      setText("statusLine", "Connection to your PC lost. Reconnecting…");
       events.close();
       try { await api("/api/state"); } catch (e) { return; }  // 401 redirects to /login
       setTimeout(connect, 2000);

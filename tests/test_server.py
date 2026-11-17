@@ -189,3 +189,50 @@ def test_default_source_is_system_audio(env):
     login(client)
     client.post("/api/session/start", json={}, headers=ORIGIN)
     assert env["pipelines"][0].source == "system"
+
+
+# --- PC control panel vs. iPad display ------------------------------------------------------
+
+def test_root_sends_pc_to_control_and_other_devices_to_display(env, tmp_path):
+    from companion.library import DocumentLibrary as Lib
+    client = env["client"]
+    login(client)
+    assert client.get("/", follow_redirects=False).headers["location"] == "/display"
+    assert "Live captions" in client.get("/display").text
+    host_app = create_app(env["library"], env["session"], EventBus(), env["auth"], host_ip="192.168.0.20")
+    pc = TestClient(host_app, client=LAN)
+    login(pc)
+    assert pc.get("/", follow_redirects=False).headers["location"] == "/control"
+    assert "Start session" in pc.get("/control").text
+
+
+def test_display_and_control_require_auth(env):
+    for path in ("/display", "/control"):
+        assert env["client"].get(path, follow_redirects=False).headers["location"] == "/login"
+    login(env["client"])
+    assert env["client"].get("/static/display.html").status_code == 404   # pages only via routes
+
+
+def test_launch_link_is_single_use_and_only_for_the_pc(env):
+    auth = env["auth"]
+    app = create_app(env["library"], env["session"], EventBus(), auth, host_ip="192.168.0.115")
+    pc = TestClient(app, client=("192.168.0.115", 5000))
+    ipad = TestClient(app, client=("192.168.0.30", 5000))
+
+    stolen = auth.create_launch_token()
+    assert ipad.get(f"/launch/{stolen}", follow_redirects=False).headers["location"] == "/login"
+    assert ipad.get("/api/state").status_code == 401             # another device gains nothing
+
+    token = auth.create_launch_token()
+    first = pc.get(f"/launch/{token}", follow_redirects=False)
+    assert first.headers["location"] == "/control" and "HttpOnly" in first.headers["set-cookie"]
+    assert pc.get("/api/state").status_code == 200
+    other_pc = TestClient(app, client=("192.168.0.115", 5001))
+    assert other_pc.get(f"/launch/{token}", follow_redirects=False).headers["location"] == "/login"
+
+
+def test_spoofed_host_header_does_not_grant_pc_role(env):
+    app = create_app(env["library"], env["session"], EventBus(), env["auth"], host_ip="192.168.0.115")
+    ipad = TestClient(app, client=("192.168.0.30", 5000), base_url="http://192.168.0.30")
+    token = env["auth"].create_launch_token()
+    assert ipad.get(f"/launch/{token}", follow_redirects=False).headers["location"] == "/login"

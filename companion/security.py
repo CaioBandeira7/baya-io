@@ -110,3 +110,21 @@ class Authenticator:
     def revoke_all(self) -> None:
         with self._lock:
             self._sessions.clear()
+
+    # -- one-time launch links for the PC's own browser --------------------------------
+    def create_launch_token(self, ttl_seconds: int = 120) -> str:
+        token = secrets.token_urlsafe(24)
+        with self._lock:
+            self._launch = getattr(self, "_launch", {})
+            self._launch[_hash(token)] = self.clock() + ttl_seconds
+        return token
+
+    def redeem_launch_token(self, token: str) -> str | None:
+        """Single use: exchange a launch token for a session token."""
+        with self._lock:
+            expiry = getattr(self, "_launch", {}).pop(_hash(token), None)
+            if expiry is None or expiry < self.clock():
+                return None
+            session = secrets.token_urlsafe(32)
+            self._sessions[_hash(session)] = self.clock() + self.session_seconds
+            return session

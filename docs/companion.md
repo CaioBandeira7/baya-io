@@ -49,8 +49,10 @@ Pairing PIN:                    123456
 ```
 
 1. The first time, Windows Firewall asks whether to allow Python: allow it on **Private networks only**.
-2. On the iPad, open the address in Safari and enter the PIN. Optional: Share → *Add to Home Screen*.
-3. Add documents, choose the audio source, press **Start session** and confirm that everyone has authorized the transcription.
+2. **PC = control panel.** The Companion opens `/control` in the PC's browser with a one-time link (no PIN on the PC; the status window has an *Open control panel* button to reopen it). Add documents, choose the audio source and Start/Stop the session there.
+3. **iPad = results display.** Open the address in Safari (type `http://` explicitly) and enter the PIN. The iPad shows `/display`: the recording indicator, the latest context in large type, older cards dimmed, and live captions at the bottom, with no controls. Optional: Share → *Add to Home Screen*.
+
+The one-time launch link only works from the PC itself (matched against the address the server is bound to, not the `Host` header) and only once.
 
 Options: `--port 8787`, `--host <LAN IP>` (if the wrong network adapter is detected), `--no-llm` (excerpts only), `--no-window`. Environment variables are listed in `companion/config.py` (for example `BAYA_LLM` to choose another Ollama model).
 
@@ -78,4 +80,4 @@ Options: `--port 8787`, `--host <LAN IP>` (if the wrong network adapter is detec
 python -m pytest tests -q
 ```
 
-87 tests cover real PDF, DOCX, TXT (Windows-1252) and Markdown files, rejected files (empty, fake PDF, corrupted PDF, scanned PDF, encrypted PDF, oversized, binary as text, path traversal names, duplicates), BM25 ranking, activation and deletion invalidation (index, cache, files, session context, answers in flight), authentication on every route including SSE, rate limiting, the local-network filter, CSRF protection, the session lifecycle, citation verification, and the VAD and turn-assembly logic without audio hardware.
+91 tests cover real PDF, DOCX, TXT (Windows-1252) and Markdown files, rejected files (empty, fake PDF, corrupted PDF, scanned PDF, encrypted PDF, oversized, binary as text, path traversal names, duplicates), BM25 ranking, activation and deletion invalidation (index, cache, files, session context, answers in flight), authentication on every route including SSE, rate limiting, the local-network filter, the PC control / iPad display routing and one-time launch links, CSRF protection, the session lifecycle, citation verification, and the VAD and turn-assembly logic without audio hardware.

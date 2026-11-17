@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Baya.io">
+<meta name="theme-color" content="#ffffff">
+<title>Baya.io · Display</title>
+<link rel="icon" href="/static/baya-logo.png">
+<link rel="apple-touch-icon" href="/static/baya-logo.png">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="display">
+  <div class="rec-banner" role="status" aria-live="polite">
+    <span class="rec-dot" aria-hidden="true"></span>
+    <span id="bannerText">LISTENING</span>
+  </div>
+
+  <header class="top slim">
+    <div class="brand">
+      <img src="/static/baya-logo.png" alt="">
+      <div><b>Baya.io</b><span id="modelName">Display</span></div>
+    </div>
+    <span class="status-pill" id="statusPill"><span class="dot"></span><span id="statusLabel">Capture off</span></span>
+  </header>
+
+  <main class="display-main">
+    <section class="results" id="context" aria-live="polite">
+      <div class="empty" id="contextEmpty"><img src="/static/baya-logo.png" alt="">Relevant passages from your documents will appear here.</div>
+    </section>
+  </main>
+
+  <footer class="captions">
+    <div class="captions-label">Live captions <span id="idleHint">Waiting for the PC to start a session.</span></div>
+    <div id="transcript"><div class="empty" id="transcriptEmpty">Live captions will appear here.</div></div>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

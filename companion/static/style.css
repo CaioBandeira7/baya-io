@@ -157,3 +157,26 @@ body.listening main.grid { height: calc(100dvh - 166px); }
   header.top { padding: 12px 16px; }
   main.grid { padding: 14px 16px 24px; }
 }
+
+/* ---------- Display mode (iPad as a results screen) ---------- */
+body.display { display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
+body.display header.top.slim { padding: 10px 22px; }
+body.display .brand img { width: 34px; height: 34px; }
+.display-main { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 18px 26px 10px; }
+.results .card { padding: 18px 20px; }
+.results .card .summary { font-size: 1.15rem; }
+.results .card:first-of-type { border-color: #cfc4ff; box-shadow: 0 10px 34px -18px rgba(107, 78, 255, .6); }
+.results .card:first-of-type .summary { font-size: 1.6rem; line-height: 1.4; letter-spacing: -.01em; }
+.results .card:first-of-type .excerpt { font-size: 1.02rem; -webkit-line-clamp: 6; }
+.results .card:not(:first-of-type) { opacity: .78; }
+.results .empty { padding: 18vh 12px; font-size: 1.05rem; }
+.results .empty img { width: 84px; }
+.captions { border-top: 1px solid var(--line); background: var(--soft); padding: 10px 26px 14px; max-height: 32vh; overflow: hidden; }
+.captions-label { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-bottom: 4px; }
+.captions-label span { text-transform: none; letter-spacing: 0; font-weight: 500; margin-left: 8px; }
+.captions .turn { border: 0; padding: 3px 0; }
+.captions .turn p { font-size: 1.15rem; color: var(--ink); }
+.captions .turn:not(:last-child) p { color: var(--muted); font-size: 1rem; }
+.captions .turn .who { display: none; }
+.captions .empty { padding: 6px 0; text-align: left; }
+.icon-btn { text-decoration: none; }

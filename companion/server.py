@@ -49,7 +49,8 @@ def _doc_json(doc) -> dict:
 
 
 def create_app(library: DocumentLibrary, session: Session, bus: EventBus, auth: Authenticator,
-               static_dir: Path = config.STATIC_DIR, heartbeat_s: float = 15.0) -> FastAPI:
+               static_dir: Path = config.STATIC_DIR, heartbeat_s: float = 15.0,
+               host_ip: str | None = None) -> FastAPI:
     app = FastAPI(title="Baya.io Companion", docs_url=None, redoc_url=None, openapi_url=None)
     login_html = (static_dir / "login.html").read_text(encoding="utf-8")
 
@@ -64,14 +65,15 @@ def create_app(library: DocumentLibrary, session: Session, bus: EventBus, auth: 
             expected = f"{request.url.scheme}://{request.headers.get('host', '')}"
             if origin != expected or request.headers.get("sec-fetch-site", "same-origin") not in ("same-origin", "none"):
                 return JSONResponse({"detail": "Cross-site request blocked."}, status_code=403)
-        if path not in PUBLIC_PATHS and not auth.is_valid(request.cookies.get(COOKIE_NAME)):
+        if (path not in PUBLIC_PATHS and not path.startswith("/launch/")
+                and not auth.is_valid(request.cookies.get(COOKIE_NAME))):
             if request.method == "GET" and not path.startswith(("/api/", "/static/")):
                 return RedirectResponse("/login", status_code=303)
             return JSONResponse({"detail": "Authentication required."}, status_code=401)
         response = await call_next(request)
         for name, value in SECURITY_HEADERS.items():
             response.headers.setdefault(name, value)
-        if path.startswith("/api/") or path in ("/", "/login"):
+        if path.startswith(("/api/", "/launch/")) or path in ("/", "/login", "/control", "/display"):
             response.headers["Cache-Control"] = "no-store"
         return response
 
@@ -82,14 +84,39 @@ def create_app(library: DocumentLibrary, session: Session, bus: EventBus, auth: 
             return RedirectResponse("/", status_code=303)
         return HTMLResponse(login_html)
 
+    def is_host_machine(request: Request) -> bool:
+        """The browser runs on the PC itself (loopback or the server's own address)."""
+        client = request.client.host if request.client else ""
+        return client in {"127.0.0.1", "::1"} | ({host_ip} if host_ip else set())
+
     @app.get("/")
-    async def index():
+    async def index(request: Request):
+        # The PC gets the control panel; other devices (the iPad) get the results display.
+        return RedirectResponse("/control" if is_host_machine(request) else "/display", status_code=303)
+
+    @app.get("/control")
+    async def control():
         return FileResponse(static_dir / "index.html")
+
+    @app.get("/display")
+    async def display():
+        return FileResponse(static_dir / "display.html")
+
+    @app.get("/launch/{token}")
+    async def launch(token: str, request: Request):
+        """One-time link opened automatically in the PC's browser, so the PC needs no PIN."""
+        session_token = auth.redeem_launch_token(token) if is_host_machine(request) else None
+        if session_token is None:
+            return RedirectResponse("/login", status_code=303)
+        response = RedirectResponse("/control", status_code=303)
+        response.set_cookie(COOKIE_NAME, session_token, max_age=auth.session_seconds, httponly=True,
+                            samesite="lax", secure=request.url.scheme == "https", path="/")
+        return response
 
     @app.get("/static/{name}")
     async def static(name: str):
         path = (static_dir / name).resolve()
-        if path.parent != static_dir.resolve() or not path.is_file() or name == "login.html":
+        if path.parent != static_dir.resolve() or not path.is_file() or name.endswith(".html"):
             raise HTTPException(404)
         return FileResponse(path)
 

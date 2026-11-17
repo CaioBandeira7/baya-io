@@ -31,19 +31,29 @@ def local_ip() -> str:
             return "127.0.0.1"
 
 
+def open_control_panel(url: str, auth: Authenticator) -> None:
+    """Open the control panel in the PC's browser with a one-time link (no PIN needed on the PC)."""
+    import webbrowser
+
+    webbrowser.open(f"{url}/launch/{auth.create_launch_token()}")
+
+
 def status_window(session: Session, url: str, auth: Authenticator) -> None:
     """Small PC-side indicator, so capture is visible on the computer as well as on the iPad."""
     import tkinter as tk
 
     root = tk.Tk()
     root.title("Baya.io Companion")
-    root.geometry("360x150+40+40")
+    root.geometry("380x170+40+40")
     root.attributes("-topmost", True)
     root.configure(bg="#ffffff")
     state = tk.Label(root, font=("Segoe UI", 16, "bold"), bg="#ffffff")
     state.pack(fill="x", padx=16, pady=(14, 2))
     info = tk.Label(root, font=("Segoe UI", 10), bg="#ffffff", fg="#6b6880", justify="left")
     info.pack(fill="x", padx=16)
+    tk.Button(root, text="Open control panel", command=lambda: open_control_panel(url, auth), relief="flat",
+              bg="#6b4eff", fg="white", activebackground="#4b32d6", activeforeground="white",
+              font=("Segoe UI", 10, "bold"), padx=12, pady=4).pack(anchor="w", padx=16, pady=(8, 0))
 
     def refresh() -> None:
         listening = session.state == "listening"
@@ -52,7 +62,7 @@ def status_window(session: Session, url: str, auth: Authenticator) -> None:
         root.configure(bg="#fdecec" if listening else "#ffffff")
         for widget in (state, info):
             widget.configure(bg="#fdecec" if listening else "#ffffff")
-        info.configure(text=f"Open on the iPad:  {url}\nPairing PIN:  {auth.pin}")
+        info.configure(text=f"iPad display:  {url}\nPairing PIN:  {auth.pin}")
         root.after(300, refresh)
 
     refresh()
@@ -81,7 +91,7 @@ def main(argv: list[str] | None = None) -> int:
     generator = None if args.no_llm else OllamaGenerator()
     whisper = WhisperService()
     session = Session(library, bus, make_pipeline_factory(whisper), Assistant(library, generator))
-    app = create_app(library, session, bus, auth)
+    app = create_app(library, session, bus, auth, host_ip=host)
     url = f"http://{host}:{args.port}"
     auth.on_pin_rotated = lambda pin: print(f"\n[security] Too many failed logins. New PIN: {pin}\n", flush=True)
 
@@ -89,7 +99,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  Open on the iPad (same Wi-Fi):  {url}")
     print(f"  Pairing PIN:                    {auth.pin}")
     print(f"  Documents folder:               {library.root}")
-    print("  Capture is OFF until you press Start on the iPad. Ctrl+C to quit.\n", flush=True)
+    print("  Control panel opens in this PC's browser. Capture is OFF until you press Start.")
+    print("  Ctrl+C to quit.\n", flush=True)
 
     def warm_up() -> None:  # load models in the background so Start is quick
         try:
@@ -108,10 +119,12 @@ def main(argv: list[str] | None = None) -> int:
     server = uvicorn.Server(uvicorn.Config(app, host=host, port=args.port, log_level="warning",
                                            proxy_headers=False, server_header=False))
     if args.no_window:
+        threading.Timer(1.5, open_control_panel, args=(url, auth)).start()
         server.run()
         return 0
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
+    threading.Timer(1.5, open_control_panel, args=(url, auth)).start()
     try:
         status_window(session, url, auth)
     except Exception:  # noqa: BLE001 - no display available: keep serving in the console
